@@ -1,0 +1,15 @@
+runtime: python
+
+entrypoint: bash -c 'python3 manage.py migrate --noinput && gunicorn -b :$PORT webapp.wsgi'  
+env: flex
+
+env_variables:
+  SECRET_KEY: 'True'
+  DEBUG: 'False'
+
+handlers:
+- url: /static
+  static_dir: static/
+
+runtime_config:
+  python_version: 3
