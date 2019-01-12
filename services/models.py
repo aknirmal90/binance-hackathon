@@ -1,9 +1,9 @@
 import pandas as pd
 from sklearn.preprocessing import Imputer, StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
 
-from services import feature_map
+from services import feature_map_ds3
 
 
 def train_model():
@@ -11,12 +11,10 @@ def train_model():
 
     features = [
         'is_positive',
-        'life_days',
-        'active_in_days_percentage',
-        'active_out_days_percentage',
-        'percentage_in_internal_volume',
-        'percentage_out_txs_count',
-        'ratio_stddev_out_amount',
+        'xbc_having_div',
+        'xbc_withdrawals',
+        'xbc_regular',
+        'ratio_txncnt_outflow_inflow'
     ]
     features_df = df[features]
 
@@ -32,27 +30,24 @@ def train_model():
     X = scaler.fit_transform(X)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y)
+    rf_class = RandomForestClassifier(n_estimators=50)
+    rf_class.fit(X_train, y_train)
+    return rf_class
 
-    nb = GaussianNB()
-    nb.fit(X_train, y_train)
-    return nb
-
-nb = train_model()
+rf = train_model()
 
 
 def get_address_risk_score(address):
     features = [
-        'life_days',
-        'active_in_days_percentage',
-        'active_out_days_percentage',
-        'percentage_in_internal_volume',
-        'percentage_out_txs_count',
-        'ratio_stddev_out_amount',
-        ]
-        
+        'xbc_having_div',
+        'xbc_withdrawals',
+        'xbc_regular',
+        'ratio_txncnt_outflow_inflow'
+    ]
+
     feature_df = feature_map_ds3([address])
     feature_df = feature_df[features]
     X = feature_df.iloc[:, :].values  # create an np.array of independent variables
 
-    p_X = int(nb.predict_proba(X)[0][1] * 100)
+    p_X = int(rf.predict_proba(X)[0][1] * 100)
     return p_X if p_X != 0 else 1

@@ -1,7 +1,7 @@
 import pandas as pd
 
 from services.aggregates import aggregate_for_addresses
-from services.userdata import user_data_for_addresses_ds3 as user_data_for_addresses
+from services.userdata import user_data_for_addresses_ds3
 from services.contract_analytics import contract_metrics
 
 
@@ -60,7 +60,7 @@ def feature_from_data_ds3(address, user_data, aggregate, code_metrics, is_positi
         
     return features
     
-def feature_map_ds3(address_array, is_positive):
+def feature_map_ds3(address_array, is_positive=True):
     user_data = user_data_for_addresses_ds3(address_array)
     aggregates = aggregate_for_addresses(address_array)
 
@@ -73,4 +73,3 @@ def feature_map_ds3(address_array, is_positive):
     
     dataFrame = pd.DataFrame(feature_list)
     return dataFrame.set_index('address').fillna(0)
-    
