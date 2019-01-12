@@ -1,12 +1,11 @@
 import pandas as pd
 
 from services.aggregates import aggregate_for_addresses
-from services.userdata import user_data_for_addresses
+from services.userdata import user_data_for_addresses_ds3 as user_data_for_addresses
 from services.contract_analytics import contract_metrics
 
 
-# utility function to get the datasets and extract features
-def feature_from_data(address, user_data, aggregate, is_positive):
+def feature_from_data_ds3(address, user_data, aggregate, code_metrics, is_positive):
  
     
     ratio_txnvol_outflow_inflow = aggregate['ether_out_amount']/aggregate['ether_in_amount'] if aggregate is not None and aggregate['ether_in_amount']>0 else 0
@@ -30,12 +29,6 @@ def feature_from_data(address, user_data, aggregate, is_positive):
     ratio_median_in_amount = (aggregate['median_in_amount']/aggregate['mean_in_amount']) if aggregate is not None and aggregate['mean_in_amount']>0 else 0
     ratio_median_out_amount = (aggregate['median_out_amount']/aggregate['mean_out_amount']) if aggregate is not None and aggregate['mean_out_amount']>0 else 0
     
-    uniq_users = len(user_data) if user_data is not None else 0
-    ratio_in_users = (aggregate['uniq_in_addresses']/uniq_users) if aggregate is not None and uniq_users>0 else 0
-    ratio_out_users = (aggregate['uniq_out_addresses']/uniq_users) if aggregate is not None and uniq_users>0 else 0
-    
-    code_metrics = contract_metrics(address)
-    
     features = {'address': address,
                 'ratio_txnvol_outflow_inflow': ratio_txnvol_outflow_inflow,
                 'ratio_txncnt_outflow_inflow': ratio_txncnt_outflow_inflow,
@@ -55,24 +48,29 @@ def feature_from_data(address, user_data, aggregate, is_positive):
                 'ratio_stddev_out_amount': ratio_stddev_out_amount,
                 'ratio_median_in_amount': ratio_median_in_amount,
                 'ratio_median_out_amount': ratio_median_out_amount,
-                
-                'ratio_in_users': ratio_in_users,
-                'ratio_out_users': ratio_out_users,
              
                 'is_positive': 1 if is_positive else 0
                 
                }
-    return {**features,**code_metrics} if code_metrics is not None else features
+    if code_metrics is not None:
+        features = {**features,**code_metrics}
     
-def feature_map(address_array, is_positive=True):
-    user_data = user_data_for_addresses(address_array)
+    if user_data is not None:
+        features = {**features,**user_data}
+        
+    return features
+    
+def feature_map_ds3(address_array, is_positive):
+    user_data = user_data_for_addresses_ds3(address_array)
     aggregates = aggregate_for_addresses(address_array)
 
-    feature_list = list(map(lambda address: feature_from_data(address, 
-                                                              user_data.loc[[address]] if address in user_data.index else None, 
+    feature_list = list(map(lambda address: feature_from_data_ds3(address, 
+                                                              user_data.loc[address] if address in user_data.index else None, 
                                                               aggregates.loc[address]  if address in aggregates.index else None,
+                                                              contract_metrics(address),
                                                               is_positive), 
                                                               address_array))
     
     dataFrame = pd.DataFrame(feature_list)
     return dataFrame.set_index('address').fillna(0)
+    
