@@ -51,7 +51,7 @@ def feature_from_data_ds3(address, user_data, aggregate, code_metrics, is_positi
              
                 'is_positive': 1 if is_positive else 0,
 
-                'xbc_having_div': 0
+                'xbc_having_div': 0,
                 'xbc_withdrawals': 0,
                 'xbc_regular': 0
 
