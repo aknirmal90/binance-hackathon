@@ -6,35 +6,26 @@ from sklearn.ensemble import RandomForestClassifier
 from services import feature_map_ds3
 
 
-def train_model():
-    df = pd.read_csv('./dataset.csv')
+df = pd.read_csv('./dataset.csv')
 
-    features = [
-        'is_positive',
-        'xbc_having_div',
-        'xbc_withdrawals',
-        'xbc_regular',
-        'ratio_txncnt_outflow_inflow'
-    ]
-    features_df = df[features]
+features = [
+    'is_positive',
+    'xbc_having_div',
+    'xbc_withdrawals',
+    'xbc_regular',
+    'ratio_txncnt_outflow_inflow'
+]
+features_df = df[features]
 
-    X = features_df.iloc[:, 1:].values  # create an np.array of independent variables
-    y = features_df.iloc[:, 0].values  # create an np.array of dependent variables
+X = features_df.iloc[:, 1:].values  # create an np.array of independent variables
+y = features_df.iloc[:, 0].values  # create an np.array of dependent variables
+              
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
 
-
-    imputer = Imputer(missing_values='NaN', strategy='mean',  axis=0)
-    imputer.fit(X[:,:])
-    X[:, :] = imputer.transform(X[:,:])
-                  
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
-    rf_class = RandomForestClassifier(n_estimators=50)
-    rf_class.fit(X_train, y_train)
-    return rf_class
-
-rf = train_model()
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+rf_class = RandomForestClassifier(n_estimators=500)
+rf_class.fit(X_train, y_train)
 
 
 def get_address_risk_score(address):
@@ -47,7 +38,9 @@ def get_address_risk_score(address):
 
     feature_df = feature_map_ds3([address])
     feature_df = feature_df[features]
-    X = feature_df.iloc[:, :].values  # create an np.array of independent variables
+    
+    X_ = feature_df.values
+    X_ = scaler.transform(X_)  # create an np.array of independent variables
 
-    p_X = int(rf.predict_proba(X)[0][1] * 100)
+    p_X = int(rf_class.predict_proba(X_)[0][1] * 100)
     return p_X if p_X != 0 else 1
