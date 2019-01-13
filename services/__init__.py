@@ -49,9 +49,15 @@ def feature_from_data_ds3(address, user_data, aggregate, code_metrics, is_positi
                 'ratio_median_in_amount': ratio_median_in_amount,
                 'ratio_median_out_amount': ratio_median_out_amount,
              
-                'is_positive': 1 if is_positive else 0
-                
+                'is_positive': 1 if is_positive else 0,
+
+                'xbc_having_div': 0
+                'xbc_withdrawals': 0,
+                'xbc_regular': 0
+
                }
+
+
     if code_metrics is not None:
         features = {**features,**code_metrics}
     
